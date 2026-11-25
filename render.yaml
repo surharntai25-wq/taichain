@@ -1,12 +1,7 @@
 services:
   - type: web
-    name: tai-blockchain-node
-    runtime: docker
+    name: taichain-seed-node
+    runtime: python
     plan: free
-    region: singapore
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: PORT
-        value: 8001
-      - key: DATA_DIR
-        value: /data
+    buildCommand: pip install -r requirements.txt
+    startCommand: python node.py --host 0.0.0.0 --port $PORT --db tai_chain.json
