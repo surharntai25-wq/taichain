@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "TaiMask — Multi-Chain & Post-Quantum Wallet",
+  "version": "3.0.0",
+  "description": "MetaMask-style right-sidebar wallet supporting Tai (ML-DSA-65), Bitcoin, Ethereum, Optimism, Base, Solana, Dogecoin, Litecoin, and Top 100+ chains.",
+  "action": {
+    "default_title": "Open TaiMask Multi-Chain Sidebar"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "http://*/*",
+    "https://*/*"
+  ]
+}

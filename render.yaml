@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: tai-blockchain-node
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8001
+      - key: DATA_DIR
+        value: /data

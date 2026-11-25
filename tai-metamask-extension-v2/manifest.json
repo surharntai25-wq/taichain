@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "TaiMask — Tai (TAI) Post-Quantum Wallet",
+  "version": "2.0.0",
+  "description": "MetaMask-style right-sidebar non-custodial wallet with 12-word Seed Phrase recovery & ML-DSA-65 post-quantum keys for Tai (TAI).",
+  "action": {
+    "default_title": "Open TaiMask Side Panel"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "http://10.1.1.91/*",
+    "http://*/*"
+  ]
+}

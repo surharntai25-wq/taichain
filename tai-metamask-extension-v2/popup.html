@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaiMask — Tai (TAI) Wallet</title>
+  <style>
+    :root {
+      --bg: #0d0e11;
+      --surface: #16181d;
+      --surface-2: #1f2229;
+      --surface-3: #2a2e38;
+      --border: #2b2f3a;
+      --text: #ffffff;
+      --muted: #9ca3af;
+      --accent: #f6851b;
+      --green: #22c55e;
+      --blue: #38bdf8;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-width: 340px;
+      height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top MetaMask-style Account & Action Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px 10px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .acct-col { display: flex; flex-direction: column; gap: 5px; }
+    .acct-select-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .acct-select {
+      background: transparent;
+      color: var(--text);
+      border: none;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      padding-right: 4px;
+    }
+    .acct-select option {
+      background: var(--surface);
+      color: var(--text);
+    }
+    .addr-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.76rem;
+      color: var(--muted);
+      cursor: pointer;
+      width: fit-content;
+    }
+    .addr-chip:hover { color: var(--text); border-color: #4b5563; }
+    .chain-dots {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 2px;
+    }
+    .chain-dots span {
+      width: 13px;
+      height: 13px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-weight: 900;
+      color: #0b0d10;
+      margin-left: -3px;
+      border: 1px solid var(--bg);
+    }
+    .chain-dots span:first-child { margin-left: 0; background: #f6851b; }
+    .chain-dots span:nth-child(2) { background: #22c55e; }
+    .chain-dots span:nth-child(3) { background: #38bdf8; }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .icon-btn:hover { background: var(--surface-2); }
+    .status-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 1.5px solid var(--bg);
+    }
+    .status-badge.off { background: var(--red); }
+
+    /* Scrollable Center Content */
+    .scroll-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 80px;
+    }
+
+    .toast {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      margin-bottom: 12px;
+      display: none;
+      word-break: break-all;
+    }
+    .toast.ok { background: rgba(34, 197, 94, 0.14); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; }
+    .toast.err { background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; }
+
+    /* Hero Balance / Fund Card */
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 18px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .vault-emblem {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 12px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #272b36, #1b1e26);
+      border: 1px solid #373d4d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .bal-amount {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .bal-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .btn-pill-white {
+      width: 100%;
+      background: #ffffff;
+      color: #0d0e11;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-pill-white:hover { opacity: 0.9; }
+
+    /* 4 Quick Action Buttons (Stake / Unstake / Send / Receive) */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .qa-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 6px;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .qa-btn:hover, .qa-btn.active {
+      background: var(--surface-2);
+      border-color: #4b5563;
+    }
+    .qa-btn.active { border-color: var(--accent); color: var(--accent); }
+    .qa-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+
+    /* Staking Yield Summary Card (like MetaMask "Money 5.2% APY") */
+    .stake-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .stake-title {
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .apy-tag {
+      color: #a3e635;
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+    .stake-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+    .btn-add-mini {
+      background: #ffffff;
+      color: #0d0e11;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    /* Action Drawer / Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+    .field input, .field textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 12px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      font-family: inherit;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .btn-primary { background: var(--accent); color: #ffffff; }
+    .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-sm {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Seed Grid */
+    .seed-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .seed-word {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 8px;
+      font-size: 0.78rem;
+      font-family: ui-monospace, monospace;
+      display: flex;
+      gap: 5px;
+    }
+    .seed-num { color: var(--muted); user-select: none; }
+    .warn-box {
+      background: rgba(246, 133, 27, 0.14);
+      border: 1px solid rgba(246, 133, 27, 0.45);
+      color: #fdba74;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    /* Activity Rows */
+    .tx-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .tx-row:last-child { border-bottom: none; }
+
+    /* Bottom Navigation Bar (MetaMask style) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      z-index: 20;
+    }
+    .bnav-item {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      height: 100%;
+    }
+    .bnav-item.active { color: var(--text); }
+    .bnav-item svg { width: 19px; height: 19px; stroke: currentColor; }
+
+    /* Slide-out Menu Drawer */
+    .drawer {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .drawer.open { display: block; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+  </style>
+</head>
+<body>
+  <!-- Persistent Top Bar -->
+  <div class="topbar">
+    <div class="acct-col">
+      <div class="acct-select-wrap">
+        <select id="accountSelect" class="acct-select">
+          <option value="0">Account 0</option>
+          <option value="1">Account 1</option>
+          <option value="2">Account 2</option>
+          <option value="3">Account 3</option>
+          <option value="4">Account 4</option>
+        </select>
+      </div>
+      <div id="addrPill" class="addr-chip" title="Click to copy address">
+        <span class="chain-dots"><span>T</span><span>Q</span><span>S</span></span>
+        <span id="addrText">Locked</span>
+        <span>❐</span>
+      </div>
+    </div>
+
+    <div class="top-icons">
+      <button id="btnTopExplorer" class="icon-btn" title="Open TaiScan Explorer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button id="btnMenuToggle" class="icon-btn" title="Wallet Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span id="statusDot" class="status-badge"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Scroll Area -->
+  <div class="scroll-body">
+    <div id="toast" class="toast"></div>
+
+    <!-- Hamburger Menu Drawer -->
+    <div id="menuDrawer" class="drawer">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:0.82rem; font-weight:700; color:var(--muted);">TaiMask • ML-DSA-65</span>
+        <span id="netStatusText" style="font-size:0.75rem; color:var(--green);">Connected</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button id="btnRevealSeed" class="btn-sm">Backup Seed</button>
+        <button id="btnLock" class="btn-sm">Lock Wallet</button>
+      </div>
+    </div>
+
+    <!-- VIEW 1: WELCOME (NO VAULT YET) -->
+    <div id="viewWelcome" class="view">
+      <div class="hero-card" style="padding: 28px 18px;">
+        <div class="vault-emblem">🦊</div>
+        <h2 style="font-size:1.3rem; margin-bottom:6px;">Welcome to TaiMask</h2>
+        <p class="bal-sub">Non-custodial post-quantum wallet (ML-DSA-65) for the Tai (TAI) blockchain.</p>
+        <button id="btnStartCreate" class="btn btn-primary">Create a New Wallet</button>
+        <button id="btnStartImport" class="btn btn-secondary">Import Using 12-Word Seed Phrase</button>
+      </div>
+    </div>
+
+    <!-- VIEW 2: CREATE WALLET & SAVE 12-WORD SEED PHRASE -->
+    <div id="viewCreate" class="view">
+      <h2 style="font-size:1.15rem; margin-bottom:4px;">Secret Recovery Phrase</h2>
+      <p class="bal-sub" style="margin-bottom:12px;">Write down these 12 words in exact order and store them safely offline.</p>
+
+      <div class="warn-box">
+        <strong>Never share your 12 words.</strong> Anyone with this recovery phrase controls all accounts derived from it.
+      </div>
+
+      <div id="seedGrid" class="seed-grid"></div>
+
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button id="btnCopySeed" class="btn-sm" style="flex:1;">Copy Seed Phrase</button>
+        <button id="btnRegenSeed" class="btn-sm" style="flex:1;">Generate New</button>
+      </div>
+
+      <form id="formCreate" class="card">
+        <div class="field">
+          <label>Confirm Word #3 and Word #12</label>
+          <div style="display:flex; gap:8px;">
+            <input id="confirmWord3" type="text" placeholder="Word #3" autocomplete="off" />
+            <input id="confirmWord12" type="text" placeholder="Word #12" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Create Wallet Password (min 6 chars)</label>
+          <input id="createPass" type="password" placeholder="Encrypts seed on this device" />
+        </div>
+        <button id="btnFinishCreate" type="submit" class="btn btn-primary">I Saved My Seed — Create Wallet</button>
+        <button id="btnBackWelcome1" type="button" class="btn btn-secondary">Back</button>
+      </form>
+    </div>
+
+    <!-- VIEW 3: IMPORT EXISTING 12-WORD SEED PHRASE -->
+    <div id="viewImport" class="view">
+      <h2 style="font-size:1.15rem; margin-bottom:4px;">Import Wallet</h2>
+      <p class="bal-sub" style="margin-bottom:12px;">Enter your 12-word Secret Recovery Phrase to restore your ML-DSA-65 accounts.</p>
+      <form id="formImport" class="card">
+        <div class="field">
+          <label>12-Word Seed Phrase</label>
+          <textarea id="importSeedInput" rows="3" placeholder="word1 word2 word3 ... word12"></textarea>
+        </div>
+        <div class="field">
+          <label>New Local Password (min 6 chars)</label>
+          <input id="importPass" type="password" placeholder="Password to unlock TaiMask" />
+        </div>
+        <button id="btnFinishImport" type="submit" class="btn btn-primary">Restore Wallet</button>
+        <button id="btnBackWelcome2" type="button" class="btn btn-secondary">Back</button>
+      </form>
+    </div>
+
+    <!-- VIEW 4: UNLOCK LOCKED VAULT (WITH FORM SUBMIT ON ENTER KEY) -->
+    <div id="viewUnlock" class="view">
+      <form id="formUnlock" class="hero-card" style="padding: 28px 18px; text-align:left;">
+        <div class="vault-emblem">🔐</div>
+        <h2 style="text-align:center; font-size:1.25rem; margin-bottom:4px;">Welcome Back</h2>
+        <p class="bal-sub" style="text-align:center;">Enter password and press Enter to unlock.</p>
+        <div class="field">
+          <label>Password</label>
+          <input id="unlockPass" type="password" placeholder="Enter wallet password" autofocus />
+        </div>
+        <button id="btnUnlock" type="submit" class="btn-pill-white" style="margin-bottom:10px;">Unlock</button>
+        <button id="btnResetImport" type="button" class="btn btn-secondary" style="margin-bottom:0;">Import Different Seed Phrase</button>
+      </form>
+    </div>
+
+    <!-- VIEW 5: MAIN UNLOCKED WALLET DASHBOARD -->
+    <div id="viewMain" class="view">
+      <!-- Hero Card -->
+      <div class="hero-card">
+        <div class="vault-emblem">🏛️</div>
+        <div id="mainBal" class="bal-amount">0.00 TAI</div>
+        <div class="bal-sub">Block #<span id="mainHeight">0</span> • Nonce <span id="mainNonce">0</span></div>
+        <button id="btnCopyFullAddr" class="btn-pill-white">Copy Receive Address</button>
+      </div>
+
+      <!-- 4 Action Buttons -->
+      <div class="quick-actions">
+        <button id="qaStake" class="qa-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Stake</span>
+        </button>
+        <button id="qaUnstake" class="qa-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span>Unstake</span>
+        </button>
+        <button id="qaSend" class="qa-btn active">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          <span>Send</span>
+        </button>
+        <button id="qaReceive" class="qa-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/></svg>
+          <span>Receive</span>
+        </button>
+      </div>
+
+      <!-- Staking Yield Card (like MetaMask Money 5.2% APY) -->
+      <div class="stake-banner">
+        <div>
+          <div class="stake-title"><span>PoS Staking</span> <span class="apy-tag">50 TAI / block</span></div>
+          <div id="mainStaked" class="stake-val">0.00 TAI</div>
+        </div>
+        <button id="btnQuickStake" class="btn-add-mini">Stake</button>
+      </div>
+
+      <!-- Send / Stake / Unstake Form -->
+      <form id="formTx" class="card">
+        <div id="recGroup" class="field">
+          <label>Recipient Address</label>
+          <input id="txRecipient" type="text" placeholder="64-char hex address..." />
+        </div>
+        <div class="field">
+          <label id="amtLabel">Amount (TAI)</label>
+          <input id="txAmount" type="number" step="0.00000001" placeholder="0.00" />
+        </div>
+        <button id="btnSendTx" type="submit" class="btn btn-primary" style="margin-bottom:0;">Send TAI</button>
+      </form>
+
+      <!-- Activity List -->
+      <div id="activitySection" class="card">
+        <div style="font-size:0.84rem; font-weight:700; margin-bottom:6px;">Recent Activity</div>
+        <div id="activityList" style="color:var(--muted); font-size:0.8rem;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- VIEW 6: REVEAL SEED BACKUP -->
+    <div id="viewReveal" class="view">
+      <h2 style="font-size:1.15rem; margin-bottom:4px;">Reveal Secret Phrase</h2>
+      <p class="bal-sub" style="margin-bottom:12px;">Enter your password and press Enter to view your 12-word recovery phrase.</p>
+      <form id="formReveal" class="card">
+        <div class="field">
+          <label>Password</label>
+          <input id="revealPass" type="password" placeholder="Wallet password" />
+        </div>
+        <button id="btnConfirmReveal" type="submit" class="btn btn-primary">Show 12 Words</button>
+        <div id="revealedGrid" class="seed-grid" style="display:none;"></div>
+        <button id="btnBackMain" type="button" class="btn btn-secondary" style="margin-bottom:0;">Back to Wallet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button id="bnavHome" class="bnav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button id="bnavStake" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+      <span>Staking</span>
+    </button>
+    <button id="bnavExplorer" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>TaiScan</span>
+    </button>
+    <button id="bnavActivity" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Activity</span>
+    </button>
+  </nav>
+
+  <script src="popup.js"></script>
+</body>
+</html>
